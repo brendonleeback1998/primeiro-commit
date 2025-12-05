@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Aluno, Graduacao, Exame, TipoUsuario, Usuario } from '../types';
 import { DbService } from '../services/db';
@@ -40,9 +41,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
         DbService.updateAluno({ ...editingStudent, ...studentForm } as Aluno);
     } else {
         // Create User first
+        const firstName = studentForm.nome?.split(' ')[0].toLowerCase() || 'user';
         const newUser: Usuario = {
             id: `u-${Date.now()}`,
-            email: `${studentForm.nome?.split(' ')[0].toLowerCase()}@dojo.com`,
+            email: `${firstName}@dojo.com`,
+            username: firstName,
             senha: '123',
             tipo_usuario: TipoUsuario.ALUNO
         };
@@ -150,15 +153,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                         <thead className="bg-slate-50 text-slate-500">
                             <tr>
                                 <th className="p-3">Nome</th>
+                                <th className="p-3">Usuário</th>
                                 <th className="p-3">Faixa</th>
                                 <th className="p-3">Telefone</th>
                                 <th className="p-3 text-right">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {alunos.map(aluno => (
+                            {alunos.map(aluno => {
+                                // Find associated username for display
+                                const user = DbService.getUsuarios().find(u => u.id === aluno.id_usuario);
+                                return (
                                 <tr key={aluno.id_aluno} className="hover:bg-slate-50">
                                     <td className="p-3 font-medium text-slate-900">{aluno.nome}</td>
+                                    <td className="p-3 text-slate-500">{user?.username}</td>
                                     <td className="p-3">
                                         <span className="bg-slate-100 px-2 py-1 rounded text-xs border border-slate-200">{aluno.faixa_atual}</span>
                                     </td>
@@ -168,7 +176,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                                         <button onClick={() => handleDeleteStudent(aluno.id_aluno)} className="p-1 hover:bg-red-50 text-red-600 rounded"><Trash2 className="w-4 h-4"/></button>
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                      </table>
                  </div>

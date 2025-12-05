@@ -1,10 +1,11 @@
+
 import { Usuario, Aluno, Graduacao, Exame, TipoUsuario } from '../types';
 
 // Dados Iniciais (Seeds)
 const INITIAL_USUARIOS: Usuario[] = [
-  { id: 'u1', email: 'admin@dojo.com', senha: '123', tipo_usuario: TipoUsuario.ADMINISTRADOR },
-  { id: 'u2', email: 'joao@dojo.com', senha: '123', tipo_usuario: TipoUsuario.ALUNO },
-  { id: 'u3', email: 'maria@dojo.com', senha: '123', tipo_usuario: TipoUsuario.ALUNO },
+  { id: 'u1', email: 'admin@dojo.com', username: 'admin', senha: '123', tipo_usuario: TipoUsuario.ADMINISTRADOR },
+  { id: 'u2', email: 'joao@dojo.com', username: 'joao', senha: '123', tipo_usuario: TipoUsuario.ALUNO },
+  { id: 'u3', email: 'maria@dojo.com', username: 'maria', senha: '123', tipo_usuario: TipoUsuario.ALUNO },
 ];
 
 const INITIAL_ALUNOS: Aluno[] = [

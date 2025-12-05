@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { TipoUsuario, Usuario, Aluno } from '../types';
 import { DbService } from '../services/db';
@@ -8,7 +9,7 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [senha, setSenha] = useState('');
   const [tipo, setTipo] = useState<TipoUsuario>(TipoUsuario.ALUNO);
   const [error, setError] = useState('');
@@ -18,7 +19,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setError('');
 
     const usuarios = DbService.getUsuarios();
-    const user = usuarios.find(u => u.email === email && u.senha === senha);
+    const user = usuarios.find(u => 
+      (u.email.toLowerCase() === identifier.toLowerCase() || u.username.toLowerCase() === identifier.toLowerCase()) && 
+      u.senha === senha
+    );
 
     if (!user) {
       setError('Credenciais inválidas.');
@@ -76,15 +80,15 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-500 uppercase mb-1">E-mail</label>
+              <label className="block text-xs font-medium text-slate-500 uppercase mb-1">E-mail ou Usuário</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  type="text"
+                  value={identifier}
+                  onChange={e => setIdentifier(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="seu@email.com"
+                  placeholder="seu@email.com ou nome"
                   required
                 />
               </div>
@@ -122,8 +126,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <div className="mt-6 text-center">
             <p className="text-xs text-slate-400">
-              Dica: Use <b>admin@dojo.com</b> / <b>123</b> para Admin<br/>
-              ou <b>joao@dojo.com</b> / <b>123</b> para Aluno
+              Dica: Use <b>admin</b> / <b>123</b> para Admin<br/>
+              ou <b>joao</b> / <b>123</b> para Aluno
             </p>
           </div>
         </div>

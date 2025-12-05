@@ -1,3 +1,4 @@
+
 export enum TipoUsuario {
   ALUNO = 'Aluno',
   ADMINISTRADOR = 'Administrador',
@@ -6,6 +7,7 @@ export enum TipoUsuario {
 export interface Usuario {
   id: string;
   email: string;
+  username: string;
   senha: string;
   tipo_usuario: TipoUsuario;
 }
