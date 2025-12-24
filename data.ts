@@ -25,16 +25,27 @@ export const MEANING_CONTENT = {
   ]
 };
 
-export const OATH_CONTENT = [
-  "Eu prometo",
-  "Ser paciente",
-  "Manter o respeito",
-  "Manter a disciplina",
-  "Ser justo",
-  "Ter força de vontade",
-  "Respeitar instrutores e professores",
-  "Não fazer mau uso do karatê",
-  "Assim prometo!"
+export const DOJO_KUN = [
+  {
+    japanese: "Hito-tsu! Jinkaku kansei ni tsutomuru koto",
+    portuguese: "Esforçar-se para a formação do caráter."
+  },
+  {
+    japanese: "Hito-tsu! Makoto no michi o mamoru koto",
+    portuguese: "Fidelidade para com o verdadeiro caminho da razão."
+  },
+  {
+    japanese: "Hito-tsu! Doryoku no seishin o yashinau koto",
+    portuguese: "Criar o intuito de esforço."
+  },
+  {
+    japanese: "Hito-tsu! Reigi o omonzuru koto",
+    portuguese: "Respeitar acima de tudo."
+  },
+  {
+    japanese: "Hito-tsu! Kekki no yū o imashimuru koto",
+    portuguese: "Conter o espírito de agressão."
+  }
 ];
 
 export const COUNTING_CONTENT = [
@@ -239,7 +250,7 @@ export const BELTS: BeltRequirement[] = [
     kyu: "5º",
     trainingTime: "6 meses",
     meaning: "Motivação",
-    characteristic: "Chutes com salto (Tobi), caindo à frente, e uso do Kakato Geri com the perna de trás.",
+    characteristic: "Chutes com salto (Tobi), caindo à frente, e uso do Kakato Geri com a perna de trás.",
     chutes: [
       "Mae Geri + Kakato Geri (Dois chutes com a mesma perna)",
       "Mawashi Geri + Kakato Geri",
@@ -363,7 +374,7 @@ export const BELTS: BeltRequirement[] = [
     ataqueDefesaSequences: [
       {
         ataque: "Oi Zuki Jodan",
-        acao: "Recuar em Kokutsu Dachi, Age Uke Jodan, aplicar Gyaku Zuki, Kizami Zuki, Koshi Mawashi Geri Chudan e Koshi Mawashi Geri Jodan with a outra perna."
+        acao: "Recuar em Kokutsu Dachi, Age Uke Jodan, aplicar Gyaku Zuki, Kizami Zuki, Koshi Mawashi Geri Chudan e Koshi Mawashi Geri Jodan com a outra perna."
       },
       {
         ataque: "Oi Zuki Jodan",
@@ -371,23 +382,23 @@ export const BELTS: BeltRequirement[] = [
       },
       {
         ataque: "Oi Zuki Jodan",
-        acao: "Recuar em Kokutsu Dachi, Soto Uke Jodan, avançar em Kiba Dachi, aplicar Empi, recuar base e finalizar with Uraken Jodan segurando o pulso."
+        acao: "Recuar em Kokutsu Dachi, Soto Uke Jodan, avançar em Kiba Dachi, aplicar Empi, recuar base e finalizar com Uraken Jodan segurando o pulso."
       },
       {
         ataque: "Oi Zuki Chudan",
-        acao: "Recuar em Kokutsu Dachi, Uchi Uke Chudan, aplicar Kizami Zuki Jodan, mudar para Kiba Dachi, Tetsui Jodan e finalizar with Ushiro Yoko Geri Jodan."
+        acao: "Recuar em Kokutsu Dachi, Uchi Uke Chudan, aplicar Kizami Zuki Jodan, mudar para Kiba Dachi, Tetsui Jodan e finalizar com Ushiro Yoko Geri Jodan."
       },
       {
         ataque: "Oi Zuki Chudan",
-        acao: "Recuar em Kokutsu Dachi, Gedan Barai, avançar with soco duplo (costelas/rosto), aplicar Ashi Barai e finalizar with Mawashi Geri."
+        acao: "Recuar em Kokutsu Dachi, Gedan Barai, avançar com soco duplo (costelas/rosto), aplicar Ashi Barai e finalizar com Mawashi Geri."
       },
       {
         ataque: "Oi Zuki Chudan",
-        acao: "Recuar em Kokutsu Dachi, Gedan Barai, avançar with Kizami Empi em Kiba Dachi, Hiraken e finalizar with Ushiro Empi Jodan."
+        acao: "Recuar em Kokutsu Dachi, Gedan Barai, avançar com Kizami Empi em Kiba Dachi, Hiraken e finalizar com Ushiro Empi Jodan."
       },
       {
         ataque: "Oi Zuki Chudan",
-        acao: "Avançar em Sanchin Dachi, Soto Uke Jodan, Kizami Uraken Jodan, Kizami Shuto Uchi no pescoço e finalizar with Ushiro Yoko Geri Chudan."
+        acao: "Avançar em Sanchin Dachi, Soto Uke Jodan, Kizami Uraken Jodan, Kizami Shuto Uchi no pescoço e finalizar com Ushiro Yoko Geri Chudan."
       }
     ],
     kataDetails: {
@@ -451,7 +462,7 @@ export const BELTS: BeltRequirement[] = [
     ataqueDefesaSequences: [
       {
         ataque: "Oi Zuki Jodan",
-        acao: "Recuar em Kokutsu Dachi, Kakuto Uke (braço frente), aplicar Teisho Zuki Chudan no peito, recuar mantendo a base e finalizar with Soto Otoshi Geri."
+        acao: "Recuar em Kokutsu Dachi, Kakuto Uke (braço frente), aplicar Teisho Zuki Chudan no peito, recuar mantendo a base e finalizar com Soto Otoshi Geri."
       },
       {
         ataque: "Oi Zuki Chudan",
@@ -459,19 +470,19 @@ export const BELTS: BeltRequirement[] = [
       },
       {
         ataque: "Oi Zuki Chudan",
-        acao: "Avançar em Kokutsu Dachi, defender antebraço por dentro, aplicar Empi no peito, segurar pulso, aplicar Uraken Jodan, recuar e finalizar with Tobi Mae Geri Chudan."
+        acao: "Avançar em Kokutsu Dachi, defender antebraço por dentro, aplicar Empi no peito, segurar pulso, aplicar Uraken Jodan, recuar e finalizar com Tobi Mae Geri Chudan."
       },
       {
         ataque: "Mawashi Geri Chudan",
-        acao: "Avançar em Kiba Dachi, defender with os dois braços segurando the perna, aplicar Uraken genital e quebrar o joelho with o antebraço."
+        acao: "Avançar em Kiba Dachi, defender with os dois braços segurando a perna, aplicar Uraken genital e quebrar o joelho with o antebraço."
       },
       {
         ataque: "Oi Zuki Chudan",
-        acao: "Recuar em Kokutsu Dachi, Gedan Barai, aplicar Kizami Empi no rosto, Ashi Barai e finalizar with Ushiro Sokuto Geri."
+        acao: "Recuar em Kokutsu Dachi, Gedan Barai, aplicar Kizami Empi no rosto, Ashi Barai e finalizar com Ushiro Sokuto Geri."
       },
       {
         ataque: "Oi Zuki Jodan",
-        acao: "Recuar em Kokutsu Dachi, Juji Uke Jodan, segurar braço, aplicar torção apoiando no ombro, Empi Geri Chudan (costas/frente), finalizar with Ura Zuki e Empi Jodan."
+        acao: "Recuar em Kokutsu Dachi, Juji Uke Jodan, segurar braço, aplicar torção apoiando no ombro, Empi Geri Chudan (costas/frente), finalizar com Ura Zuki e Empi Jodan."
       }
     ],
     kataDetails: {
@@ -543,7 +554,7 @@ export const BELTS: BeltRequirement[] = [
       },
       {
         ataque: "Oi Zuki Chudan",
-        acao: "Esquiva lateral, Shuto Uchi Uke, segura braço, Yoko Geri Chudan, puxa Kakato Geri Jodan e finalizar with Mawashi Geri Jodan (mesma perna)."
+        acao: "Esquiva lateral, Shuto Uchi Uke, segura braço, Yoko Geri Chudan, puxa Kakato Geri Jodan e finaliza with Mawashi Geri Jodan (mesma perna)."
       },
       {
         ataque: "Oi Zuki Chudan",
@@ -573,8 +584,6 @@ export const BELTS: BeltRequirement[] = [
       {
         name: "Tekki Shodan",
         bases: "Kiba Dachi e Kosa Dachi",
-        defesas: "Gedan Barai, Age Uke, Soto Uke e Uchi Uke",
-        ataques: "Empi, Tetsui e Hiza Geri",
         duracao: "Aproximadamente 50 segundos",
         kyodos: 29,
         kiai: "No 15º e no 29º movimento"
