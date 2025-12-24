@@ -1,4 +1,6 @@
 
+import React, { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
 import { Section, BeltRequirement, AttackDefenseSequence, KataDetails } from './types';
 import { 
   HISTORY_CONTENT, 
@@ -10,336 +12,321 @@ import {
   KATAS_DETAILED
 } from './data';
 
-// --- Estado Global ---
-let activeSection: Section = Section.GRADUATION;
-let selectedBeltIndex: number = 0;
-let expandedBaseIndex: number | null = null;
+// --- Componentes de UI ---
 
-// --- Renderização Principal ---
-function render() {
-  const container = document.getElementById('content-area');
-  if (!container) return;
-
-  container.innerHTML = '';
-  
-  switch (activeSection) {
-    case Section.HISTORY:
-      container.innerHTML = renderHistory();
-      break;
-    case Section.BASICS:
-      container.innerHTML = renderBasics();
-      break;
-    case Section.TECHNICAL:
-      container.innerHTML = renderTechnical();
-      break;
-    case Section.GRADUATION:
-      container.innerHTML = renderGraduation();
-      break;
-    case Section.KATA:
-      container.innerHTML = renderKatas();
-      break;
-  }
-  
-  updateNav();
-  attachEvents();
-}
-
-function updateNav() {
-  const nav = document.getElementById('main-nav');
-  if (!nav) return;
-
-  const sections = [
-    { id: Section.HISTORY, label: 'História' },
-    { id: Section.BASICS, label: 'Dojo' },
-    { id: Section.TECHNICAL, label: 'Bases' },
-    { id: Section.GRADUATION, label: 'Faixas' },
-    { id: Section.KATA, label: 'Katas' },
-  ];
-
-  nav.innerHTML = sections.map(s => `
-    <button 
-      data-section="${s.id}"
-      class="nav-link text-[11px] font-bold uppercase tracking-[0.15em] px-2 h-full ${activeSection === s.id ? 'nav-link-active' : 'text-zinc-400 hover:text-zinc-900'}"
-    >
-      ${s.label}
-    </button>
-  `).join('');
-}
-
-// --- Helpers de Template ---
-
-function renderTechnicalList(title: string, items: string[], accentColor: string = 'text-zinc-400') {
-  if (!items || items.length === 0) return '';
-  return `
-    <div class="space-y-4">
-      <h3 class="text-[10px] font-extrabold ${accentColor} uppercase tracking-[0.2em] border-b border-zinc-50 pb-2">${title}</h3>
-      <ul class="space-y-2.5">
-        ${items.map(item => `
-          <li class="flex items-start text-sm group">
-            <span class="text-red-500 mr-2 font-black">/</span>
-            <span class="text-zinc-600 font-medium leading-tight">${item}</span>
+const TechnicalList = ({ title, items, accent = "black" }: { title: string, items?: string[], accent?: string }) => {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="space-y-6">
+      <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-300 border-b border-zinc-100 pb-3">
+        {title}
+      </h4>
+      <ul className="space-y-4">
+        {items.map((item, i) => (
+          <li key={i} className="flex items-start group">
+            <span className={`text-red-600 mr-3 font-bold transition-transform group-hover:translate-x-1`}>/</span>
+            <span className={`text-sm font-bold leading-tight ${accent === 'red' ? 'text-red-600' : 'text-black'}`}>
+              {item}
+            </span>
           </li>
-        `).join('')}
+        ))}
       </ul>
     </div>
-  `;
-}
+  );
+};
 
-function renderKumiteSection(description: string, sequences: AttackDefenseSequence[]) {
-  if (!description && (!sequences || sequences.length === 0)) return '';
-  return `
-    <section class="mt-20 pt-10 border-t border-zinc-100 space-y-10">
-      <div class="space-y-2">
-        <h3 class="text-xs font-bold text-zinc-900 uppercase tracking-widest">Kumite (Luta)</h3>
-        ${description ? `<p class="text-sm text-zinc-500 italic">${description}</p>` : ''}
-      </div>
-      
-      ${sequences && sequences.length > 0 ? `
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          ${sequences.map((seq, i) => `
-            <div class="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100 hover:border-red-100 transition-colors">
-              <div class="flex items-center gap-3 mb-4">
-                <span class="bg-zinc-900 text-white text-[9px] font-bold px-2 py-0.5 rounded">SEQ ${i+1}</span>
-                <p class="text-sm font-bold text-zinc-800">${seq.ataque}</p>
-              </div>
-              <div class="pl-4 border-l border-zinc-200 space-y-3">
-                ${seq.defesa ? `<p class="text-xs text-zinc-500"><strong class="text-zinc-800 uppercase text-[9px] block mb-0.5">Defesa</strong> ${seq.defesa}</p>` : ''}
-                ${seq.contraAtaque ? `<p class="text-xs text-red-600 font-medium"><strong class="text-zinc-800 uppercase text-[9px] block mb-0.5">Contra-ataque</strong> ${seq.contraAtaque}</p>` : ''}
-                ${seq.acao ? `<p class="text-xs text-zinc-500 leading-relaxed"><strong class="text-zinc-800 uppercase text-[9px] block mb-0.5">Ação Técnica</strong> ${seq.acao}</p>` : ''}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
-    </section>
-  `;
-}
+const App = () => {
+  const [activeSection, setActiveSection] = useState<Section>(Section.GRADUATION);
+  const [selectedBeltIdx, setSelectedBeltIdx] = useState(0);
+  const [expandedBase, setExpandedBase] = useState<number | null>(null);
 
-// --- Templates Principais ---
+  const belt = BELTS[selectedBeltIdx];
 
-function renderHistory() {
-  return `
-    <div class="animate-content space-y-16">
-      <header class="text-center space-y-4">
-        <h1 class="text-4xl font-extrabold tracking-tight text-zinc-900">${HISTORY_CONTENT.title}</h1>
-        <p class="text-zinc-400 italic text-sm max-w-lg mx-auto leading-relaxed">"${HISTORY_CONTENT.funakoshiQuote}"</p>
-      </header>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8">
-        ${HISTORY_CONTENT.founders.map(f => `
-          <div class="border-b border-zinc-100 pb-6 group">
-            <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">${f.period}</h3>
-            <p class="text-lg font-semibold text-zinc-800 group-hover:text-zinc-900 transition-colors">${f.name}</p>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function renderBasics() {
-  return `
-    <div class="animate-content space-y-20">
-      <div class="grid grid-cols-3 gap-8">
-        ${MEANING_CONTENT.parts.map(p => `
-          <div class="text-center group">
-            <p class="text-5xl font-light text-zinc-200 mb-4 group-hover:text-red-500 transition-colors duration-700">${p.kanji}</p>
-            <p class="text-sm font-extrabold uppercase tracking-widest text-zinc-900">${p.romaji}</p>
-            <p class="text-[10px] text-zinc-400 uppercase tracking-wider mt-1">${p.meaning}</p>
-          </div>
-        `).join('')}
-      </div>
-
-      <section class="space-y-12">
-        <h2 class="text-center text-xs font-bold uppercase tracking-[0.3em] text-zinc-400">Dōjō Kun</h2>
-        <div class="space-y-8 max-w-2xl mx-auto">
-          ${DOJO_KUN.map((kun, i) => `
-            <div class="flex gap-6 items-start">
-              <span class="text-zinc-200 font-extrabold text-2xl leading-none">0${i+1}</span>
-              <div>
-                <p class="text-sm font-bold text-zinc-900 mb-1">${kun.japanese}</p>
-                <p class="text-xs text-zinc-500 leading-relaxed">${kun.portuguese}</p>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </section>
-
-      <section class="pt-10 border-t border-zinc-100">
-        <div class="grid grid-cols-5 gap-4 text-center">
-          ${COUNTING_CONTENT.map(c => `
-            <div>
-              <p class="text-xl font-bold text-zinc-800">${c.n}</p>
-              <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-tighter">${c.name}</p>
-            </div>
-          `).join('')}
-        </div>
-      </section>
-    </div>
-  `;
-}
-
-function renderTechnical() {
-  return `
-    <div class="animate-content space-y-10">
-      <header class="mb-12">
-        <h1 class="text-3xl font-extrabold tracking-tight">Dachi-Waza</h1>
-        <p class="text-zinc-400 text-sm mt-1">O segredo de um Karatê forte reside na sua base.</p>
-      </header>
-      <div class="space-y-2">
-        ${BASES.map((b, i) => `
-          <div class="group">
-            <button data-base-index="${i}" class="w-full flex items-center justify-between py-6 px-4 rounded-xl transition-all hover:bg-white hover:shadow-sm ${expandedBaseIndex === i ? 'bg-white shadow-sm' : ''}">
-              <span class="text-sm font-bold tracking-tight ${expandedBaseIndex === i ? 'text-red-500' : 'text-zinc-600 group-hover:text-zinc-900'}">${b.name}</span>
-              <svg class="w-4 h-4 text-zinc-300 transition-transform ${expandedBaseIndex === i ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            <div class="${expandedBaseIndex === i ? 'max-h-[800px] opacity-100 py-8' : 'max-h-0 opacity-0'} overflow-hidden transition-all duration-500 px-4">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-                <div class="bg-white p-4 rounded-2xl border border-zinc-50">
-                  <img src="${b.imageUrl}" alt="${b.name}" class="w-full h-48 object-contain">
-                </div>
-                <div class="space-y-3">
-                  <p class="text-xs font-bold text-zinc-400 uppercase tracking-widest">Anotações técnicas</p>
-                  <p class="text-sm text-zinc-600 leading-relaxed font-medium">${b.description}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function renderGraduation() {
-  const belt = BELTS[selectedBeltIndex];
+  // Estilos de cores para as faixas
   const beltColors: Record<string, string> = {
-    'Branca': 'bg-zinc-100', 'Amarela': 'bg-yellow-400', 'Vermelha': 'bg-red-500',
-    'Laranja': 'bg-orange-400', 'Verde': 'bg-green-500', 'Roxa': 'bg-purple-500',
-    'Marrom': 'bg-amber-800', 'Preta': 'bg-zinc-900'
+    'Branca': 'bg-zinc-200', 'Amarela': 'bg-yellow-400', 'Vermelha': 'bg-red-600',
+    'Laranja': 'bg-orange-500', 'Verde': 'bg-green-600', 'Roxa': 'bg-purple-600',
+    'Marrom': 'bg-amber-900', 'Preta': 'bg-black'
   };
 
-  // Unifica socos e ataques de braço para o Kihon
-  const braçoTrabalho = [...(belt.socos || []), ...(belt.ataqueBraco || [])];
-
-  return `
-    <div class="animate-content space-y-12">
-      <div class="flex space-x-2 overflow-x-auto no-scrollbar py-2">
-        ${BELTS.map((b, i) => `
-          <button data-belt-index="${i}" class="px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${selectedBeltIndex === i ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-white text-zinc-400 border-zinc-100 hover:border-zinc-300'}">
-            <span class="inline-block w-2 h-2 rounded-full mr-2 ${beltColors[b.color] || 'bg-zinc-200'}"></span>
-            ${b.color}
-          </button>
-        `).join('')}
-      </div>
-
-      <div class="space-y-16">
-        <header class="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-zinc-100 pb-10">
-          <div class="space-y-1">
-            <h2 class="text-4xl font-extrabold text-zinc-900 tracking-tight">Faixa ${belt.color}</h2>
-            <p class="text-xs font-bold text-red-500 uppercase tracking-[0.2em]">${belt.kyu ? belt.kyu + ' Kyu' : 'Grau Dan'}</p>
-          </div>
-          <div class="flex gap-8 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-            <div>
-              <p class="text-[8px] opacity-60 mb-1">Tempo Mínimo</p>
-              <p class="text-zinc-900">${belt.trainingTime}</p>
+  return (
+    <div className="min-h-screen bg-white text-black selection:bg-red-100 selection:text-red-900">
+      {/* Navegação Superior Minimalista */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-black flex items-center justify-center">
+              <span className="text-white font-black text-lg">空</span>
             </div>
-            <div>
-              <p class="text-[8px] opacity-60 mb-1">Conceito</p>
-              <p class="text-zinc-900">${belt.meaning}</p>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] hidden sm:block">Shotokan / Guia</span>
+          </div>
+          <div className="flex gap-8 overflow-x-auto no-scrollbar py-2">
+            {[Section.HISTORY, Section.BASICS, Section.TECHNICAL, Section.GRADUATION, Section.KATA].map((s) => (
+              <button
+                key={s}
+                onClick={() => setActiveSection(s)}
+                className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors whitespace-nowrap ${activeSection === s ? 'text-red-600' : 'text-zinc-400 hover:text-black'}`}
+              >
+                {s.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-6 py-16 lg:py-24">
+        {/* Renderização Condicional */}
+        
+        {activeSection === Section.HISTORY && (
+          <div className="animate-content space-y-32 max-w-4xl">
+            <header className="space-y-8">
+              <h1 className="text-7xl lg:text-9xl font-black tracking-tighter leading-[0.8]">ORIGEM.</h1>
+              <p className="text-2xl text-zinc-400 font-light italic leading-relaxed">"{HISTORY_CONTENT.funakoshiQuote}"</p>
+            </header>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-16">
+              {HISTORY_CONTENT.founders.map((f, i) => (
+                <div key={i} className="group border-t border-zinc-100 pt-8 hover:border-black transition-colors">
+                  <span className="text-[10px] font-black text-red-600 uppercase tracking-widest block mb-2">{f.period}</span>
+                  <h3 className="text-3xl font-bold tracking-tight">{f.name}</h3>
+                </div>
+              ))}
             </div>
           </div>
-        </header>
+        )}
 
-        <section class="space-y-12">
-          <div class="space-y-4">
-            <h3 class="text-xs font-bold text-zinc-900 uppercase tracking-widest">Kihon (Trabalho Técnico)</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-10">
-              ${renderTechnicalList("Ataques de Braço", braçoTrabalho, "text-zinc-900")}
-              ${renderTechnicalList("Chutes", belt.chutes || [], "text-red-500")}
-              ${renderTechnicalList("Defesas", belt.defesas || [], "text-zinc-900")}
-              ${renderTechnicalList("Troca de Perna / Tobi", belt.trocaPerna || [])}
-              ${renderTechnicalList("Recuos Técnicos", belt.recuos || [])}
-              ${renderTechnicalList("Sequências", belt.sequenciasTecnicas || [])}
+        {activeSection === Section.BASICS && (
+          <div className="animate-content space-y-40">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-24">
+              {MEANING_CONTENT.parts.map((p, i) => (
+                <div key={i} className="space-y-6">
+                  <p className="text-8xl font-black text-black leading-none">{p.kanji}</p>
+                  <div>
+                    <h3 className="text-xl font-black uppercase tracking-widest">{p.romaji}</h3>
+                    <p className="text-zinc-400 uppercase tracking-widest text-xs mt-1">{p.meaning}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        </section>
 
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-16 pt-10 border-t border-zinc-100">
-          <div class="space-y-4">
-            <h3 class="text-xs font-bold text-zinc-900 uppercase tracking-widest">Kata da Graduação</h3>
-            <p class="text-lg font-bold text-zinc-800">${belt.kata}</p>
-            ${belt.observacaoKata ? `<p class="text-xs text-zinc-400 leading-relaxed italic">${belt.observacaoKata}</p>` : ''}
-          </div>
-          <div class="space-y-4">
-            <h3 class="text-xs font-bold text-zinc-900 uppercase tracking-widest">Característica</h3>
-            <p class="text-sm text-zinc-500 leading-relaxed font-medium">${belt.characteristic}</p>
-          </div>
-        </section>
-
-        ${renderKumiteSection(belt.kumite || '', belt.ataqueDefesaSequences || [])}
-      </div>
-    </div>
-  `;
-}
-
-function renderKatas() {
-  return `
-    <div class="animate-content space-y-12">
-      <header class="mb-16">
-        <h1 class="text-3xl font-extrabold tracking-tight">Katas</h1>
-        <p class="text-zinc-400 text-sm mt-1">A alma do Shotokan.</p>
-      </header>
-      
-      <div class="space-y-24">
-        ${KATAS_DETAILED.map(k => `
-          <div class="group space-y-8">
-            <div class="flex flex-col md:flex-row justify-between md:items-end gap-4 border-b border-zinc-100 pb-6">
-              <div>
-                <h2 class="text-4xl font-extrabold text-zinc-900 tracking-tighter">${k.name}</h2>
-                <p class="text-xs font-bold text-red-500 uppercase tracking-[0.3em] mt-1">${k.translation}</p>
+            <section className="space-y-20 max-w-3xl">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-300">Dōjō Kun / Preceitos</h2>
+              <div className="space-y-16">
+                {DOJO_KUN.map((kun, i) => (
+                  <div key={i} className="relative pl-12">
+                    <span className="absolute left-0 top-0 text-5xl font-black text-zinc-100 -z-10 leading-none">0{i+1}</span>
+                    <p className="text-2xl font-bold mb-2">{kun.japanese}</p>
+                    <p className="text-zinc-500 font-medium leading-relaxed">{kun.portuguese}</p>
+                  </div>
+                ))}
               </div>
-              <div class="text-right">
-                <span class="text-[10px] font-black text-zinc-300 uppercase tracking-widest">${k.kyodos} Movimentos</span>
-              </div>
-            </div>
-            <p class="text-sm text-zinc-500 leading-relaxed max-w-2xl">${k.description}</p>
-            <div class="aspect-video w-full rounded-2xl overflow-hidden bg-zinc-50 border border-zinc-100 group-hover:border-red-100 transition-colors">
-               <iframe src="${k.videoUrl}" class="w-full h-full opacity-90 group-hover:opacity-100 transition-opacity" allowfullscreen></iframe>
+            </section>
+          </div>
+        )}
+
+        {activeSection === Section.TECHNICAL && (
+          <div className="animate-content space-y-12">
+            <header className="mb-20">
+              <h1 className="text-7xl font-black tracking-tighter">BASES.</h1>
+              <p className="text-zinc-400 text-lg">A fundação de toda técnica.</p>
+            </header>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {BASES.map((b, i) => (
+                <div 
+                  key={i} 
+                  className={`border p-8 transition-all cursor-pointer ${expandedBase === i ? 'border-black bg-zinc-50 lg:col-span-2' : 'border-zinc-100 hover:border-zinc-300'}`}
+                  onClick={() => setExpandedBase(expandedBase === i ? null : i)}
+                >
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-2xl font-black uppercase italic tracking-tighter">{b.name}</h3>
+                    <span className={`w-2 h-2 rounded-full ${expandedBase === i ? 'bg-red-600' : 'bg-zinc-200'}`}></span>
+                  </div>
+                  {expandedBase === i && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-content">
+                      <div className="aspect-square bg-white flex items-center justify-center p-4 border border-zinc-100">
+                        <img src={b.imageUrl} className="max-w-full max-h-full object-contain" alt={b.name} />
+                      </div>
+                      <p className="text-sm text-zinc-600 leading-relaxed self-center font-medium">{b.description}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
-        `).join('')}
-      </div>
+        )}
+
+        {activeSection === Section.GRADUATION && (
+          <div className="animate-content space-y-24">
+            {/* Seletor de Faixa Estilo "Timeline" */}
+            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-8 border-b border-zinc-100">
+              {BELTS.map((b, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedBeltIdx(i)}
+                  className={`px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] border transition-all whitespace-nowrap ${selectedBeltIdx === i ? 'bg-black text-white border-black shadow-lg translate-y-[-4px]' : 'text-zinc-400 border-zinc-100 hover:border-zinc-300'}`}
+                >
+                  <span className={`inline-block w-2 h-2 rounded-full mr-3 ${beltColors[b.color]}`}></span>
+                  {b.color}
+                </button>
+              ))}
+            </div>
+
+            {/* Cabeçalho da Faixa */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12">
+              <div className="space-y-2">
+                <span className="text-[12px] font-black text-red-600 uppercase tracking-[0.4em]">{belt.kyu ? belt.kyu + ' Kyu' : 'Grau Dan'}</span>
+                <h2 className="text-8xl lg:text-9xl font-black tracking-tighter leading-[0.8]">
+                  {belt.color.toUpperCase()}.
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 gap-12 border-l border-zinc-100 pl-12">
+                <div>
+                  <p className="text-[9px] font-black text-zinc-300 uppercase tracking-widest mb-2">Conceito</p>
+                  <p className="text-xl font-bold uppercase italic">{belt.meaning}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-zinc-300 uppercase tracking-widest mb-2">Treino Mín.</p>
+                  <p className="text-xl font-bold uppercase">{belt.trainingTime}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Dossiê Técnico (Kihon Completo) */}
+            <div className="pt-16 border-t border-zinc-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-16 gap-y-20">
+                <TechnicalList title="Ataques de Braço" items={[...(belt.socos || []), ...(belt.ataqueBraco || [])]} />
+                <TechnicalList title="Chutes Técnicos" items={belt.chutes} accent="red" />
+                <TechnicalList title="Defesas Básicas" items={belt.defesas} />
+                <TechnicalList title="Troca de Perna / Tobi" items={belt.trocaPerna} />
+                <TechnicalList title="Recuos Técnicos" items={belt.recuos} />
+                <TechnicalList title="Sequências Combinadas" items={belt.sequenciasTecnicas} />
+              </div>
+            </div>
+
+            {/* Seção Kumite (Impacto Visual) */}
+            {(belt.kumite || (belt.ataqueDefesaSequences && belt.ataqueDefesaSequences.length > 0)) && (
+              <section className="bg-black text-white -mx-6 px-6 py-24 lg:px-24">
+                <div className="max-w-7xl mx-auto space-y-16">
+                  <header className="space-y-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.6em] text-red-600">Kumite / Aplicação Prática</h3>
+                    <p className="text-4xl font-black italic tracking-tighter">{belt.kumite || "Combate Controlado"}</p>
+                  </header>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-12">
+                    {belt.ataqueDefesaSequences?.map((seq, i) => (
+                      <div key={i} className="border-l border-zinc-800 pl-8 space-y-4 group">
+                        <span className="text-red-600 font-black text-[10px]">#0{i+1}</span>
+                        <div className="space-y-1">
+                          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Ataque</p>
+                          <p className="text-xl font-bold group-hover:text-red-500 transition-colors">{seq.ataque}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Defesa / Ação</p>
+                          <p className="text-sm font-medium leading-relaxed text-zinc-300">{seq.acao || seq.defesa}</p>
+                        </div>
+                        {seq.contraAtaque && (
+                          <div className="pt-2">
+                            <span className="bg-red-600 text-white text-[9px] font-black px-2 py-1 uppercase tracking-tighter italic">Kime: {seq.contraAtaque}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Seção Kata */}
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-20 pt-24 border-t border-zinc-100">
+              <div className="space-y-8">
+                <div className="space-y-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Kata Principal</h3>
+                  <p className="text-5xl font-black italic">{belt.kata}</p>
+                </div>
+                <p className="text-sm text-zinc-500 leading-relaxed italic">{belt.observacaoKata}</p>
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Característica da Graduação</h4>
+                   <p className="text-lg font-bold leading-tight">{belt.characteristic}</p>
+                </div>
+              </div>
+              
+              <div className="bg-zinc-50 p-10 space-y-10">
+                {(belt.katasDetails || (belt.kataDetails ? [belt.kataDetails] : [])).map((k, i) => (
+                  <div key={i} className="space-y-6">
+                    <div className="flex justify-between items-baseline border-b border-zinc-200 pb-2">
+                      <h4 className="text-xl font-black">{k.name}</h4>
+                      <span className="text-[10px] font-black text-red-600 uppercase">{k.kyodos} Mov.</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-8">
+                      <div><p className="text-[9px] font-black text-zinc-400 uppercase mb-1">Bases</p><p className="text-xs font-bold">{k.bases}</p></div>
+                      <div><p className="text-[9px] font-black text-zinc-400 uppercase mb-1">Kiai</p><p className="text-xs font-bold">{k.kiai}</p></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {activeSection === Section.KATA && (
+          <div className="animate-content space-y-40">
+            <header className="mb-32">
+              <h1 className="text-7xl font-black tracking-tighter">LISTA DE KATAS.</h1>
+              <p className="text-zinc-400 text-lg">As formas fundamentais do estilo Shotokan.</p>
+            </header>
+            
+            <div className="space-y-64">
+              {KATAS_DETAILED.map((k, i) => (
+                <div key={i} className="space-y-16">
+                  <div className="flex flex-col lg:flex-row justify-between items-baseline gap-4 border-b-2 border-black pb-6">
+                    <h2 className="text-6xl lg:text-8xl font-black tracking-tighter uppercase italic leading-none">{k.name}</h2>
+                    <span className="text-red-600 font-black text-lg uppercase tracking-[0.3em]">{k.translation}</span>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                    <div className="lg:col-span-5 space-y-12">
+                      <p className="text-xl text-zinc-600 leading-relaxed font-light">{k.description}</p>
+                      <div className="grid grid-cols-2 gap-12 border-t border-zinc-100 pt-8">
+                        <div>
+                          <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest mb-1">Foco Técnico</p>
+                          <p className="text-sm font-bold uppercase">{k.focus}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest mb-1">Movimentos</p>
+                          <p className="text-2xl font-black">{k.kyodos}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="lg:col-span-7">
+                      <div className="aspect-video bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden">
+                        <iframe 
+                          src={k.videoUrl} 
+                          className="w-full h-full opacity-80 hover:opacity-100 transition-opacity" 
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+
+      <footer className="bg-white border-t border-zinc-100 py-20 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
+          <div className="flex items-center gap-4">
+             <div className="w-12 h-12 bg-black flex items-center justify-center text-white font-black text-2xl">空</div>
+             <div>
+               <p className="text-sm font-black uppercase tracking-widest leading-none">Shotokan Ryu</p>
+               <p className="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">Guia Técnico Oficial</p>
+             </div>
+          </div>
+          <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.5em]">Karatê-do: Caminho das mãos vazias.</p>
+        </div>
+      </footer>
     </div>
-  `;
-}
+  );
+};
 
-// --- Gestão de Eventos ---
-function attachEvents() {
-  document.querySelectorAll('[data-section]').forEach(btn => {
-    (btn as HTMLElement).onclick = () => {
-      activeSection = (btn as HTMLElement).dataset.section as Section;
-      expandedBaseIndex = null;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      render();
-    };
-  });
-
-  document.querySelectorAll('[data-belt-index]').forEach(btn => {
-    (btn as HTMLElement).onclick = () => {
-      selectedBeltIndex = parseInt((btn as HTMLElement).dataset.beltIndex || '0');
-      render();
-    };
-  });
-
-  document.querySelectorAll('[data-base-index]').forEach(btn => {
-    (btn as HTMLElement).onclick = () => {
-      const idx = parseInt((btn as HTMLElement).dataset.baseIndex || '0');
-      expandedBaseIndex = expandedBaseIndex === idx ? null : idx;
-      render();
-    };
-  });
-}
-
-// Iniciar App
-document.addEventListener('DOMContentLoaded', render);
-render();
+const root = createRoot(document.getElementById('content-area')!);
+root.render(<App />);
